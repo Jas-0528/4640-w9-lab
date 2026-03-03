@@ -18,27 +18,26 @@
 3. Add a new SSH key using scripts/import_lab_key
     
     ```bash
-    sudo +x scripts/import_lab_key
-    ./scripts/import_lab_key
+    sudo chmod +x scripts/import_lab_key
+    ./scripts/import_lab_key <path to key>
     ```
     
 4. Create a new AMI using the Packer and Ansible configuration
     
     ```bash
-    cd /packer
+    cd packer
     packer init .
     packer fmt .
     packer validate .
     packer build .
     ```
     
-
 ### Create Module
 
 1. Create new directory to hold the module
     
     ```bash
-    cd /terraform
+    cd ../terraform
     mkdir modules/web-server
     ```
     
@@ -47,50 +46,62 @@
     ```bash
     cd modules/web-server
     nano variables.tf
-    
-    # include the following variables
-    project_name" {
-      type = string
+    ```
+
+    ```hcl
+    variable "project_name" {
+      type        = string
+      description = "The name of the project these resources belong to"
     }
-    
+
     variable "ami" {
-      type = string
+      type        = string
+      description = "The ID of the machine image to use for the server"
     }
-    
+
     variable "instance_type" {
-      type    = string
-      default = "t3.micro"
+      type        = string
+      default     = "t3.micro"
+      description = "The EC2 instance type"
     }
-    
+
     variable "key_name" {
-      type = string
+      type        = string
+      description = "The name of the SSH public key"
     }
-    
+
     variable "vpc_security_group_ids" {
-      type = list(string)
+      type        = list(string)
+      description = "The list VPC security group IDs"
     }
-    
+
     variable "subnet_id" {
-      type = string
+      type        = string
+      description = "The subnet ID"
     }
     ```
-    
+
 3. Create and define the [outputs.tf](http://outputs.tf) file
     
     ```bash
     nano outputs.tf
-    
+    ```
+
+    ```hcl
     # include the following outputs
-    output "instance_ip_address" {
+    output "instance_ip" {
       value = aws_instance.web.public_ip
+      description = "The instance IP address"
     }
     
-    output "instance_dns_name" {
+    output "instance_dns" {
       value = aws_instance.web.public_dns
+      description = "The instance DNS name"
     }
     
     output "instance_id" {
       value = aws_instance.web.id
+      description = "The instance ID"
     }
     ```
     
@@ -98,7 +109,9 @@
     
     ```bash
     nano main.tf
-    
+    ```
+
+    ```hcl
     resource "aws_instance" "web" {
       ami                    = var.ami
       instance_type          = var.instance_type
@@ -112,21 +125,22 @@
       }
     }
     ```
-    
 
 ### Cleanup
 
 1. Run terraform destroy
     
     ```bash
+    cd ../..
     terraform destroy
     ```
-    
-2. Remove AMI and snapshot build 
+
+2. Remove AMI and snapshot build
+
 3. Delete SSH key
     
     ```bash
-    sudo +x ./scripts/remove_lab_key
-    ./scripts/remove_lab_key
+    cd ..
+    sudo chmod +x ./scripts/delete_lab_key
+    ./scripts/delete_lab_key
     ```
-    
